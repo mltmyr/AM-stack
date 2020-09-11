@@ -21,3 +21,5 @@ Slice and generate trajectories for additive manufacturing with robot manipulato
 * Build with platform appropriate tool. MVSC on windows. Usually makefile on linux.
 
 **Only tested with MVSC and CL compiler!! Changes to the CMakelists.txt may be required for other platforms.**
+
+**Important! Some small changes to the libslic3r source files must be done in order to be able to compile. 'and' must be changes to '&&'. '_1' must be changed to 'boost::placeholder::_1' and '#include <boost/placeholder.hpp>' have to be appended to the same files.**
