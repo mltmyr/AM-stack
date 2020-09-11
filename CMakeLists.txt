@@ -55,14 +55,15 @@ endif(MSVC)
 find_package(Threads REQUIRED)
 
 #====================[Boost dependency]====================
-set(BOOST_INCLUDEDIR "D:/boost/boost_1_67_0")
-set(BOOST_LIBRARYDIR "D:/boost/boost_1_67_0/stage/lib")
+#set(BOOST_INCLUDEDIR "D:/boost/boost_1_67_0")
+#set(BOOST_LIBRARYDIR "D:/boost/boost_1_67_0/stage/lib")
+#set(Boost_NO_BOOST_CMAKE ON)
 
 #set(BOOST_INCLUDEDIR "D:/boost/boost")
 #set(BOOST_LIBRARYDIR "D:/boost/boost/stage/lib")
 
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost REQUIRED COMPONENTS system thread filesystem)
+set(Boost_DIR "D:/boost/boost_1_74_0/lib64-msvc-14.1/cmake/Boost-1.74.0")
+find_package(Boost 1.74 REQUIRED COMPONENTS system thread filesystem nowide)
 
 #====================[LibSlic3r dependency]====================
 set(Slic3r_DIR "D:/slic3r")
@@ -244,7 +245,7 @@ if(MSVC)
         target_link_options(LibSlic3r PUBLIC /INCREMENTAL:NO /NODEFAULTLIB:MSVCRT)
     endif(SLIC3R_STATIC)
 endif(MSVC)
-
+#target_compile_definitions(LibSlic3r PUBLIC BOOST_BIND_GLOBAL_PLACEHOLDERS)
 target_include_directories(LibSlic3r PUBLIC ${LibSlic3r_INCLUDE_DIRS} PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(LibSlic3r
     admesh
@@ -257,6 +258,29 @@ target_link_libraries(LibSlic3r
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
 )
+
+IF (WIN32)
+    add_library(boost-nowide STATIC
+        ${Slic3r_DIR}/xs/src/boost/nowide/iostream.cpp
+    )
+    target_include_directories(boost-nowide
+        PUBLIC "${Slic3r_DIR}/xs/src"
+        PUBLIC ${Boost_INCLUDE_DIRS}
+    )
+    #target_link_libraries(boost-nowide Boost)
+    if(MSVC)
+        # Tell boost pragmas to not rename nowide as we are building it
+        add_definitions(-DBOOST_NOWIDE_NO_LIB)
+    endif()    
+    target_link_libraries(LibSlic3r boost-nowide)
+    
+
+    # MinGW apparently has some multiple definitions of UUID-related items
+    # deal with it.
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+       set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
+    endif()
+ENDIF(WIN32)
 
 #====================[Create Executable Targets]====================
 set(executableName am_wpg)
@@ -271,7 +295,8 @@ add_executable(${executableName} ${sourceFiles})
 target_compile_features(${executableName} PUBLIC cxx_std_14)
 target_include_directories(${executableName} 
     PUBLIC ${includeFolderName}
-    PUBLIC ${LibSlic3rIncludeFiles})
+    PUBLIC ${LibSlic3rIncludeFiles}
+    PUBLIC ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(${executableName} LibSlic3r)
 
