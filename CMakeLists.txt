@@ -40,7 +40,7 @@ endif(SLIC3R_STATIC)
 
 if(MSVC)
     if(SLIC3R_STATIC)
-        set(LIBSLIC3R_STATIC_DEBUG_OPTIONS "/MTd")
+        set(LIBSLIC3R_STATIC_DEBUG_OPTIONS "/DEBUG" "/Od" "/MTd")
         set(LIBSLIC3R_STATIC_RELEASE_OPTIONS "/MT")
         add_compile_options(
             "$<$<CONFIG:DEBUG>:${LIBSLIC3R_STATIC_DEBUG_OPTIONS}>"
